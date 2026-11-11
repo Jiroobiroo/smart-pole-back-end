@@ -9,6 +9,8 @@ const swaggerSpec = require('./docs/swaggerSpec');
 const logger = require('./middleware/logger');
 const lampRoutes = require('./routes/lampRoutes');
 const lcdRoutes = require('./routes/lcdRoutes');
+const telemetryRoutes = require('./routes/telemetryRoutes');
+const databaseRoutes = require('./routes/databaseRoutes');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -42,6 +44,8 @@ app.get('/health', (req, res) => {
 // Mount Routes
 app.use('/api/v1/lamp', lampRoutes);
 app.use('/api/v1/lcd', lcdRoutes);
+app.use('/api/v1/telemetry', telemetryRoutes);
+app.use('/api/v1/database', databaseRoutes);
 
 // Fallthrough & Error Handlers
 app.use(notFoundHandler);

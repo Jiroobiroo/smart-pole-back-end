@@ -3,7 +3,7 @@
   "info": {
     "title": "Smart Pole Monitoring & Control System API",
     "version": "1.0.0",
-    "description": "\n**Smart Pole IoT Central Management System**\nThis REST API allows operators to remotely monitor and control smart pole streetlight functionalities, view live device status, and track historical events.\n\n### Features\n- **Lamp ON/OFF Control**: Switch the streetlight remotely.\n- **Light Dimming**: Adjust lamp brightness ($0 - 100\\%$).\n- **Toggle Control**: Invert lamp state with a single call.\n- **Event History**: Audit trail of commands and status changes.\n- **Health Check**: Server health probe.\n    ",
+    "description": "\n**Smart Pole IoT Central Management System**\nThis REST API allows operators to remotely monitor and control smart pole streetlight functionalities, display messages on the pole's LCD, record sensor telemetry, compute real-time power consumption, detect faults, and view historical events.\n\n### Core Modules\n1. **Lamp Control**: Remotely switch streetlight ON/OFF, toggle state, and adjust brightness.\n2. **LCD Display**: Send text or individual letters to the pole's 16x2 screen, manage backlight, and clear screen.\n3. **Telemetry & Electrical Monitoring**: Ingest temperature, voltage, and current readings, automatically calculate power ($P = V \\times I$), track energy consumption, and trigger alerts on abnormal readings.\n4. **Audit History & Alerts**: Track every command and anomaly with timestamps.\n    ",
     "contact": {
       "name": "Smart Pole Engineering Team"
     }
@@ -20,6 +20,14 @@
       "description": "Endpoints for controlling and monitoring the smart pole streetlight"
     },
     {
+      "name": "LCD Display",
+      "description": "Endpoints for sending text and characters to the pole LCD"
+    },
+    {
+      "name": "Telemetry & Power",
+      "description": "Endpoints for sensor data ingestion, electrical power calculations, and fault alerts"
+    },
+    {
       "name": "System",
       "description": "System health and diagnostics"
     }
@@ -31,10 +39,10 @@
           "System"
         ],
         "summary": "Check API Server Health",
-        "description": "Returns the operational status and timestamp of the Smart Pole Backend API.",
+        "description": "Returns operational status and timestamp of the Smart Pole Backend API.",
         "responses": {
           "200": {
-            "description": "API is healthy and operational",
+            "description": "API is healthy",
             "content": {
               "application/json": {
                 "schema": {
@@ -52,10 +60,10 @@
           "Lamp Control"
         ],
         "summary": "Get Current Lamp Status",
-        "description": "Retrieves the live operational status of the streetlight (ON/OFF state, brightness percentage, mode, and last update timestamp).",
+        "description": "Retrieves live status (ON/OFF, brightness %, mode, last updated).",
         "responses": {
           "200": {
-            "description": "Current lamp status successfully retrieved",
+            "description": "Current lamp status",
             "content": {
               "application/json": {
                 "schema": {
@@ -78,8 +86,6 @@
           {
             "name": "x-client-id",
             "in": "header",
-            "required": false,
-            "description": "Optional identifier for the command source (e.g. Dashboard, MobileApp, Scheduler)",
             "schema": {
               "type": "string",
               "example": "Central-Dashboard"
@@ -108,7 +114,7 @@
             }
           },
           "400": {
-            "description": "Invalid input payload (e.g. missing or invalid state value)",
+            "description": "Invalid input payload",
             "content": {
               "application/json": {
                 "schema": {
@@ -126,22 +132,10 @@
           "Lamp Control"
         ],
         "summary": "Toggle Lamp ON / OFF",
-        "description": "Inverts the current state of the streetlight (switches ON to OFF, or OFF to ON).",
-        "parameters": [
-          {
-            "name": "x-client-id",
-            "in": "header",
-            "required": false,
-            "description": "Optional source client identifier",
-            "schema": {
-              "type": "string",
-              "example": "Operator-Console"
-            }
-          }
-        ],
+        "description": "Inverts current state of the streetlight.",
         "responses": {
           "200": {
-            "description": "Lamp state successfully toggled",
+            "description": "Lamp toggled successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -158,19 +152,8 @@
         "tags": [
           "Lamp Control"
         ],
-        "summary": "Adjust Lamp Brightness (Dimming)",
-        "description": "Sets the streetlight brightness level between 0% and 100%. Setting brightness > 0 turns the lamp ON automatically; setting 0% turns the lamp OFF.",
-        "parameters": [
-          {
-            "name": "x-client-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "example": "Central-Dashboard"
-            }
-          }
-        ],
+        "summary": "Adjust Lamp Brightness",
+        "description": "Sets brightness level between 0% and 100%.",
         "requestBody": {
           "required": true,
           "content": {
@@ -183,7 +166,7 @@
         },
         "responses": {
           "200": {
-            "description": "Lamp brightness successfully updated",
+            "description": "Brightness adjusted",
             "content": {
               "application/json": {
                 "schema": {
@@ -193,7 +176,7 @@
             }
           },
           "400": {
-            "description": "Invalid brightness value (must be an integer between 0 and 100)",
+            "description": "Invalid brightness",
             "content": {
               "application/json": {
                 "schema": {
@@ -211,28 +194,325 @@
           "Lamp Control"
         ],
         "summary": "Get Lamp Event History",
-        "description": "Retrieves audit records of recent lamp switching and dimming events.",
         "parameters": [
           {
             "name": "limit",
             "in": "query",
-            "required": false,
-            "description": "Maximum number of history records to retrieve (default: 20, max: 50)",
             "schema": {
               "type": "integer",
-              "default": 20,
-              "minimum": 1,
-              "maximum": 50
+              "default": 20
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "History list successfully retrieved",
+            "description": "Recent lamp events",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LampHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lcd": {
+      "get": {
+        "tags": [
+          "LCD Display"
+        ],
+        "summary": "Get Current LCD Screen Text",
+        "description": "Retrieves current lines, backlight status, and last update timestamp.",
+        "responses": {
+          "200": {
+            "description": "Current LCD status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LcdStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lcd/message": {
+      "post": {
+        "tags": [
+          "LCD Display"
+        ],
+        "summary": "Set LCD Text Message",
+        "description": "Updates text on line 1, line 2, or both lines.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LcdMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "LCD text updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LcdActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lcd/char": {
+      "post": {
+        "tags": [
+          "LCD Display"
+        ],
+        "summary": "Send Single Character / Letter to LCD",
+        "description": "Appends a single letter to the designated line (fulfills mandatory requirement: \"including individual letters or text\").",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LcdCharRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Character appended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LcdActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lcd/clear": {
+      "post": {
+        "tags": [
+          "LCD Display"
+        ],
+        "summary": "Clear LCD Screen",
+        "description": "Wipes both lines on the display.",
+        "responses": {
+          "200": {
+            "description": "Screen cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LcdActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lcd/backlight": {
+      "post": {
+        "tags": [
+          "LCD Display"
+        ],
+        "summary": "Toggle or Set LCD Backlight",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "backlight": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Backlight updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LcdActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lcd/history": {
+      "get": {
+        "tags": [
+          "LCD Display"
+        ],
+        "summary": "Get LCD Message History",
+        "responses": {
+          "200": {
+            "description": "Recent message updates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LcdHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry": {
+      "post": {
+        "tags": [
+          "Telemetry & Power"
+        ],
+        "summary": "Submit Sensor Readings (Telemetry Ingestion)",
+        "description": "Ingests measured temperature, voltage, and current from the pole controller. Automatically computes power ($P = V \\times I$), calculates accumulated energy, and checks for threshold alerts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelemetryIngestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Telemetry successfully processed and stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid sensor measurements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/latest": {
+      "get": {
+        "tags": [
+          "Telemetry & Power"
+        ],
+        "summary": "Get Latest Sensor Readings & Computed Power",
+        "description": "Returns real-time voltage, current, calculated power (Watts), energy (Wh), enclosure temperature, and active fault alerts.",
+        "responses": {
+          "200": {
+            "description": "Latest telemetry data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/history": {
+      "get": {
+        "tags": [
+          "Telemetry & Power"
+        ],
+        "summary": "Get Historical Telemetry Readings",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Telemetry history list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/alerts": {
+      "get": {
+        "tags": [
+          "Telemetry & Power"
+        ],
+        "summary": "Get Active Fault Detection Alerts",
+        "description": "Lists any active alerts (e.g. over-temperature, overvoltage, undervoltage, or overcurrent).",
+        "responses": {
+          "200": {
+            "description": "Active alert list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/telemetry/alerts/clear": {
+      "post": {
+        "tags": [
+          "Telemetry & Power"
+        ],
+        "summary": "Clear Active Alerts",
+        "responses": {
+          "200": {
+            "description": "Alerts cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
                 }
               }
             }
@@ -252,12 +532,24 @@
           },
           "timestamp": {
             "type": "string",
-            "format": "date-time",
-            "example": "2026-11-11T07:30:00.000Z"
+            "format": "date-time"
           },
           "service": {
             "type": "string",
             "example": "Smart Pole Backend API"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "Invalid parameter"
           }
         }
       },
@@ -273,7 +565,6 @@
               "ON",
               "OFF"
             ],
-            "description": "Target operational state of the streetlight",
             "example": "ON"
           }
         }
@@ -288,7 +579,6 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
-            "description": "Brightness level from 0 to 100 percent",
             "example": 75
           }
         }
@@ -314,16 +604,11 @@
           },
           "mode": {
             "type": "string",
-            "enum": [
-              "MANUAL",
-              "AUTO"
-            ],
             "example": "MANUAL"
           },
           "lastUpdated": {
             "type": "string",
-            "format": "date-time",
-            "example": "2026-11-11T07:31:00.000Z"
+            "format": "date-time"
           }
         }
       },
@@ -355,40 +640,6 @@
           }
         }
       },
-      "LampEventItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "example": 1
-          },
-          "type": {
-            "type": "string",
-            "example": "STATE_CHANGE"
-          },
-          "previousState": {
-            "type": "string",
-            "example": "OFF"
-          },
-          "newState": {
-            "type": "string",
-            "example": "ON"
-          },
-          "brightness": {
-            "type": "integer",
-            "example": 100
-          },
-          "source": {
-            "type": "string",
-            "example": "REST_API"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2026-11-11T07:31:00.000Z"
-          }
-        }
-      },
       "LampHistoryResponse": {
         "type": "object",
         "properties": {
@@ -403,21 +654,260 @@
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/LampEventItem"
+              "type": "object"
             }
           }
         }
       },
-      "ErrorResponse": {
+      "LcdMessageRequest": {
+        "type": "object",
+        "properties": {
+          "line1": {
+            "type": "string",
+            "maxLength": 16,
+            "example": "CAUTION ROADWORK"
+          },
+          "line2": {
+            "type": "string",
+            "maxLength": 16,
+            "example": "SPEED LIMIT 30"
+          },
+          "message": {
+            "type": "string",
+            "example": "HELLO WORLD"
+          }
+        }
+      },
+      "LcdCharRequest": {
+        "type": "object",
+        "required": [
+          "char"
+        ],
+        "properties": {
+          "char": {
+            "type": "string",
+            "maxLength": 1,
+            "example": "A"
+          },
+          "line": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ],
+            "default": 1,
+            "example": 1
+          }
+        }
+      },
+      "LcdStatusData": {
+        "type": "object",
+        "properties": {
+          "poleId": {
+            "type": "string",
+            "example": "POLE-001"
+          },
+          "line1": {
+            "type": "string",
+            "example": "SMART POLE SYS"
+          },
+          "line2": {
+            "type": "string",
+            "example": "SYSTEM READY"
+          },
+          "backlight": {
+            "type": "boolean",
+            "example": true
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LcdStatusResponse": {
         "type": "object",
         "properties": {
           "success": {
             "type": "boolean",
-            "example": false
+            "example": true
           },
-          "error": {
+          "data": {
+            "$ref": "#/components/schemas/LcdStatusData"
+          }
+        }
+      },
+      "LcdActionResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
             "type": "string",
-            "example": "Invalid lamp state: \"HALF_ON\". State must be either \"ON\" or \"OFF\"."
+            "example": "LCD text updated successfully"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LcdStatusData"
+          }
+        }
+      },
+      "LcdHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "count": {
+            "type": "integer",
+            "example": 1
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "TelemetryIngestRequest": {
+        "type": "object",
+        "required": [
+          "temperature",
+          "voltage",
+          "current"
+        ],
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "description": "Enclosure temperature in Celsius",
+            "example": 26.4
+          },
+          "voltage": {
+            "type": "number",
+            "description": "Monitored voltage in Volts",
+            "example": 228.5
+          },
+          "current": {
+            "type": "number",
+            "description": "Monitored current in Amperes",
+            "example": 0.52
+          }
+        }
+      },
+      "TelemetryData": {
+        "type": "object",
+        "properties": {
+          "poleId": {
+            "type": "string",
+            "example": "POLE-001"
+          },
+          "temperature": {
+            "type": "number",
+            "example": 26.4
+          },
+          "voltage": {
+            "type": "number",
+            "example": 228.5
+          },
+          "current": {
+            "type": "number",
+            "example": 0.52
+          },
+          "power": {
+            "type": "number",
+            "description": "Calculated Power P = V * I in Watts",
+            "example": 118.82
+          },
+          "energyWh": {
+            "type": "number",
+            "description": "Accumulated energy in Watt-hours",
+            "example": 14.5
+          },
+          "systemStatus": {
+            "type": "string",
+            "enum": [
+              "NORMAL",
+              "WARNING",
+              "CRITICAL"
+            ],
+            "example": "NORMAL"
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TelemetryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/TelemetryData"
+          }
+        }
+      },
+      "TelemetryHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "count": {
+            "type": "integer",
+            "example": 5
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelemetryData"
+            }
+          }
+        }
+      },
+      "AlertsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "poleId": {
+                "type": "string",
+                "example": "POLE-001"
+              },
+              "status": {
+                "type": "string",
+                "example": "NORMAL"
+              },
+              "alerts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "lastChecked": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
         }
       }

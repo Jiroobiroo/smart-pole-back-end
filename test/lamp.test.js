@@ -81,6 +81,14 @@ describe('Smart Pole Lamp Control API Tests', () => {
     assert.ok(res.body.paths['/api/v1/lamp']);
   });
 
+  test('GET /api/v1/database/viewer returns SQLite tables', async () => {
+    const res = await request('/api/v1/database/viewer');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.tables.lamp_status);
+    assert.ok(res.body.tables.lamp_logs);
+  });
+
   test('GET /api/v1/lamp returns default initial status', async () => {
     const res = await request('/api/v1/lamp');
     assert.equal(res.status, 200);

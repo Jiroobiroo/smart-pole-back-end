@@ -15,10 +15,11 @@ Backend REST API for controlling and monitoring the smart pole streetlight, buil
  ┌─────────────────────────────────────────────────────────────────┐
  │                   Central Backend System                        │
  │                                                                 │
- │   Routes:       src/routes/lampRoutes.js                        │
+ │   Routes:       src/routes/lampRoutes.js, databaseRoutes.js     │
  │   Middleware:   src/middleware/validator.js & logger.js         │
  │   Controller:   src/controllers/lampController.js               │
- │   Service:      src/services/lampService.js (State & History)   │
+ │   Service:      src/services/lampService.js                     │
+ │   Database:     data/smartpole.db (SQLite: status & audit logs) │
  └─────────────────────────────────────────────────────────────────┘
 ```
 
