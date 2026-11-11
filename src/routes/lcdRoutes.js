@@ -26,3 +26,4 @@ router.post('/backlight', lcdController.setBacklight);
 router.get('/history', lcdController.getLcdHistory);
 
 module.exports = router;
+
