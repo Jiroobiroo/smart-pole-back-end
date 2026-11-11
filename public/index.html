@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Pole - Lamp Control Dashboard</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --lamp-on: #fbbf24;
+      --lamp-off: #475569;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    header {
+      text-align: center;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 1rem;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      color: var(--text-main);
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    .status-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .bulb-container {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--lamp-off);
+      transition: all 0.3s ease;
+      box-shadow: 0 0 0px transparent;
+    }
+    .bulb-container.is-on {
+      background: var(--lamp-on);
+      box-shadow: 0 0 40px rgba(251, 191, 36, 0.6);
+    }
+    .bulb-icon {
+      font-size: 3.5rem;
+    }
+    .status-badge {
+      font-size: 1.25rem;
+      font-weight: bold;
+      padding: 0.3rem 1.2rem;
+      border-radius: 9999px;
+      background: #334155;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .status-badge.on {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+    .status-badge.off {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    button {
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    .btn-on {
+      background-color: var(--success);
+      color: #fff;
+    }
+    .btn-off {
+      background-color: var(--danger);
+      color: #fff;
+    }
+    .btn-toggle {
+      background-color: var(--accent);
+      color: #0f172a;
+    }
+    .slider-box {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .slider-box label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid #334155;
+      padding-top: 1rem;
+    }
+    .metadata-grid span b {
+      color: var(--text-main);
+    }
+    .history-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      color: var(--accent);
+    }
+    .history-list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .history-item {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #1e293b;
+      border: 1px solid var(--accent);
+      color: var(--text-main);
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Smart Pole Management System</h1>
+      <p>Lamp ON/OFF & Dimming Control API Interface</p>
+    </header>
+
+    <div class="card status-display">
+      <div id="bulb" class="bulb-container">
+        <span class="bulb-icon">💡</span>
+      </div>
+      <div id="statusBadge" class="status-badge off">OFF</div>
+
+      <div class="controls" style="width: 100%;">
+        <button class="btn-on" onclick="sendLampCommand('ON')">Turn ON</button>
+        <button class="btn-off" onclick="sendLampCommand('OFF')">Turn OFF</button>
+        <button class="btn-toggle" onclick="toggleLamp()">Toggle</button>
+      </div>
+
+      <div class="slider-box" style="width: 100%;">
+        <label>
+          <span>Brightness Level</span>
+          <span id="brightnessVal">100%</span>
+        </label>
+        <input type="range" id="brightnessSlider" min="0" max="100" value="100" onchange="adjustBrightness(this.value)" oninput="document.getElementById('brightnessVal').innerText = this.value + '%'">
+      </div>
+
+      <div class="metadata-grid" style="width: 100%;">
+        <span>Target Pole: <b id="poleId">POLE-001</b></span>
+        <span>Control Mode: <b id="mode">MANUAL</b></span>
+        <span style="grid-column: span 2;">Last Updated: <b id="lastUpdated">-</b></span>
+      </div>
+    </div>
+
+    <div class="card history-card">
+      <h3>Command & Event History</h3>
+      <ul id="historyList" class="history-list">
+        <li class="history-item"><span>No commands issued yet</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Command executed</div>
+
+  <script>
+    const API_BASE = '/api/v1/lamp';
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(API_BASE);
+        const json = await res.json();
+        if (json.success) {
+          updateUI(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch status:', err);
+      }
+    }
+
+    function updateUI(data) {
+      const bulb = document.getElementById('bulb');
+      const badge = document.getElementById('statusBadge');
+      const brightnessVal = document.getElementById('brightnessVal');
+      const slider = document.getElementById('brightnessSlider');
+      const poleId = document.getElementById('poleId');
+      const mode = document.getElementById('mode');
+      const lastUpdated = document.getElementById('lastUpdated');
+
+      poleId.innerText = data.poleId;
+      mode.innerText = data.mode;
+      lastUpdated.innerText = new Date(data.lastUpdated).toLocaleTimeString();
+      brightnessVal.innerText = data.brightness + '%';
+      slider.value = data.brightness;
+
+      if (data.status === 'ON') {
+        bulb.classList.add('is-on');
+        const glowOpacity = (data.brightness / 100) * 0.8 + 0.2;
+        bulb.style.boxShadow = `0 0 ${data.brightness / 2 + 10}px rgba(251, 191, 36, ${glowOpacity})`;
+        badge.innerText = 'ON';
+        badge.className = 'status-badge on';
+      } else {
+        bulb.classList.remove('is-on');
+        bulb.style.boxShadow = 'none';
+        badge.innerText = 'OFF';
+        badge.className = 'status-badge off';
+      }
+    }
+
+    async function sendLampCommand(state) {
+      try {
+        const res = await fetch(`${API_BASE}/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-client-id': 'DASHBOARD_UI' },
+          body: JSON.stringify({ state })
+        });
+        const json = await res.json();
+        if (json.success) {
+          updateUI(json.data);
+          showToast(`Lamp switched to ${state}`);
+          loadHistory();
+        } else {
+          showToast(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        showToast('Network error connecting to API');
+      }
+    }
+
+    async function toggleLamp() {
+      try {
+        const res = await fetch(`${API_BASE}/toggle`, {
+          method: 'POST',
+          headers: { 'x-client-id': 'DASHBOARD_UI' }
+        });
+        const json = await res.json();
+        if (json.success) {
+          updateUI(json.data);
+          showToast(`Lamp toggled to ${json.data.status}`);
+          loadHistory();
+        }
+      } catch (err) {
+        showToast('Network error connecting to API');
+      }
+    }
+
+    async function adjustBrightness(val) {
+      try {
+        const res = await fetch(`${API_BASE}/dimming`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-client-id': 'DASHBOARD_UI' },
+          body: JSON.stringify({ brightness: parseInt(val, 10) })
+        });
+        const json = await res.json();
+        if (json.success) {
+          updateUI(json.data);
+          showToast(`Brightness set to ${val}%`);
+          loadHistory();
+        }
+      } catch (err) {
+        showToast('Network error connecting to API');
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(`${API_BASE}/history?limit=10`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const list = document.getElementById('historyList');
+          if (json.data.length === 0) {
+            list.innerHTML = '<li class="history-item"><span>No commands issued yet</span></li>';
+            return;
+          }
+          list.innerHTML = json.data.map(item => `
+            <li class="history-item">
+              <span><b>${item.type}</b>: ${item.previousState || '-'} &rarr; <b>${item.newState || item.lampStatus}</b></span>
+              <span style="color: #94a3b8;">${new Date(item.timestamp).toLocaleTimeString()} (${item.source})</span>
+            </li>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load history', err);
+      }
+    }
+
+    // Auto-refresh status & history every 2 seconds
+    fetchStatus();
+    loadHistory();
+    setInterval(fetchStatus, 2000);
+  </script>
+</body>
+</html>

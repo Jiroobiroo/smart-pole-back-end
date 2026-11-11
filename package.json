@@ -1,0 +1,26 @@
+{
+  "name": "smart-pole-lamp-api",
+  "version": "1.0.0",
+  "description": "Smart Pole Monitoring and Control System - Lamp Control REST API",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "keywords": [
+    "iot",
+    "smart-pole",
+    "lamp-control",
+    "express",
+    "rest-api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
