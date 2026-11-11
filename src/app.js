@@ -8,6 +8,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swaggerSpec');
 const logger = require('./middleware/logger');
 const lampRoutes = require('./routes/lampRoutes');
+const lcdRoutes = require('./routes/lcdRoutes');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -40,6 +41,7 @@ app.get('/health', (req, res) => {
 
 // Mount Routes
 app.use('/api/v1/lamp', lampRoutes);
+app.use('/api/v1/lcd', lcdRoutes);
 
 // Fallthrough & Error Handlers
 app.use(notFoundHandler);

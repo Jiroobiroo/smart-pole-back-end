@@ -339,3 +339,4 @@ This REST API allows operators to remotely monitor and control smart pole street
 };
 
 module.exports = swaggerSpec;
+
