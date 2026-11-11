@@ -1,9 +1,11 @@
 /**
  * LCD Display Service
- * Manages 16x2 (or 20x4) LCD text buffers, cursor position, backlight, and history.
+ * Manages 16x2 LCD text buffers, backlight, single character streaming,
+ * and persists all state and audit history to SQLite.
  */
 const config = require('../config');
 const logger = require('../middleware/logger');
+const dbHelpers = require('../database/db');
 
 class LcdService {
   constructor() {
@@ -16,7 +18,24 @@ class LcdService {
     this.history = [];
     this.maxHistorySize = 30;
 
+    this._loadInitialStateFromDb();
+
     logger.info(`LcdService initialized for pole [${this.poleId}]`);
+  }
+
+  async _loadInitialStateFromDb() {
+    try {
+      const row = await dbHelpers.get(`SELECT * FROM lcd_status WHERE pole_id = ?`, [this.poleId]);
+      if (row) {
+        this.line1 = row.line1;
+        this.line2 = row.line2;
+        this.backlight = Boolean(row.backlight);
+        this.lastUpdated = row.last_updated;
+        logger.info(`Loaded LCD state from SQLite: L1="${this.line1}", L2="${this.line2}", Backlight=${this.backlight}`);
+      }
+    } catch (err) {
+      logger.warn('Could not read lcd_status from SQLite during startup; using defaults.', err);
+    }
   }
 
   /**
@@ -39,15 +58,12 @@ class LcdService {
    * @param {Object} params
    * @param {string} [params.line1]
    * @param {string} [params.line2]
-   * @param {string} [params.message] - Convenience string, split across lines if needed
+   * @param {string} [params.message]
    * @param {string} source
    */
   setMessage({ line1, line2, message }, source = 'REST_API') {
-    const prev = { line1: this.line1, line2: this.line2 };
-
     if (message !== undefined) {
-      // Split message by newline or chunk to 16 chars
-      const lines = message.split('\n');
+      const lines = String(message).split('\n');
       this.line1 = (lines[0] || '').substring(0, this.maxCharsPerLine);
       this.line2 = (lines[1] || '').substring(0, this.maxCharsPerLine);
     } else {
@@ -71,6 +87,8 @@ class LcdService {
     };
 
     this._recordEvent(event);
+    this._persistToDb('TEXT_UPDATE', this.line1, this.line2, null, source);
+
     logger.info(`LCD on [${this.poleId}] updated: L1="${this.line1}" | L2="${this.line2}" (Source: ${source})`);
 
     return this.getStatus();
@@ -117,6 +135,8 @@ class LcdService {
     };
 
     this._recordEvent(event);
+    this._persistToDb('CHAR_APPENDED', this.line1, this.line2, singleChar, source);
+
     return this.getStatus();
   }
 
@@ -137,6 +157,8 @@ class LcdService {
     };
 
     this._recordEvent(event);
+    this._persistToDb('CLEARED', '', '', null, source);
+
     logger.info(`LCD on [${this.poleId}] cleared (Source: ${source})`);
 
     return this.getStatus();
@@ -160,6 +182,8 @@ class LcdService {
     };
 
     this._recordEvent(event);
+    this._persistToDb('BACKLIGHT_CHANGE', this.line1, this.line2, null, source);
+
     logger.info(`LCD backlight on [${this.poleId}] set to: ${this.backlight}`);
 
     return this.getStatus();
@@ -181,6 +205,29 @@ class LcdService {
     }
   }
 
+  /**
+   * Asynchronously update SQLite tables for LCD
+   */
+  async _persistToDb(action, line1, line2, charSent, source) {
+    try {
+      // 1. Upsert lcd_status
+      await dbHelpers.run(
+        `INSERT OR REPLACE INTO lcd_status (pole_id, line1, line2, backlight, last_updated)
+         VALUES (?, ?, ?, ?, ?)`,
+        [this.poleId, this.line1, this.line2, this.backlight ? 1 : 0, this.lastUpdated]
+      );
+
+      // 2. Insert into lcd_logs
+      await dbHelpers.run(
+        `INSERT INTO lcd_logs (pole_id, action, line1, line2, char_sent, source, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [this.poleId, action, line1, line2, charSent, source, this.lastUpdated]
+      );
+    } catch (err) {
+      logger.error('Failed to persist LCD state to SQLite', err);
+    }
+  }
+
   reset() {
     this.line1 = 'SMART POLE SYS';
     this.line2 = 'SYSTEM READY';
@@ -191,4 +238,3 @@ class LcdService {
 }
 
 module.exports = new LcdService();
-

@@ -11,6 +11,8 @@ router.get('/viewer', async (req, res, next) => {
   try {
     const lampStatusRows = await dbHelpers.all(`SELECT * FROM lamp_status`);
     const lampLogsRows = await dbHelpers.all(`SELECT * FROM lamp_logs ORDER BY id DESC LIMIT 50`);
+    const lcdStatusRows = await dbHelpers.all(`SELECT * FROM lcd_status`);
+    const lcdLogsRows = await dbHelpers.all(`SELECT * FROM lcd_logs ORDER BY id DESC LIMIT 50`);
 
     return res.status(200).json({
       success: true,
@@ -23,6 +25,14 @@ router.get('/viewer', async (req, res, next) => {
         lamp_logs: {
           count: lampLogsRows.length,
           rows: lampLogsRows
+        },
+        lcd_status: {
+          count: lcdStatusRows.length,
+          rows: lcdStatusRows
+        },
+        lcd_logs: {
+          count: lcdLogsRows.length,
+          rows: lcdLogsRows
         }
       }
     });
@@ -45,3 +55,4 @@ router.post('/clear-logs', async (req, res, next) => {
 });
 
 module.exports = router;
+

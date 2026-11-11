@@ -53,7 +53,32 @@ db.serialize(() => {
     )
   `);
 
-  // Table 3: Telemetry History (ready for sensor integration)
+  // Table 3: LCD Current Status
+  db.run(`
+    CREATE TABLE IF NOT EXISTS lcd_status (
+      pole_id TEXT PRIMARY KEY,
+      line1 TEXT DEFAULT 'SMART POLE SYS',
+      line2 TEXT DEFAULT 'SYSTEM READY',
+      backlight INTEGER DEFAULT 1,
+      last_updated TEXT NOT NULL
+    )
+  `);
+
+  // Table 4: LCD Message Audit Logs
+  db.run(`
+    CREATE TABLE IF NOT EXISTS lcd_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pole_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      line1 TEXT,
+      line2 TEXT,
+      char_sent TEXT,
+      source TEXT NOT NULL,
+      timestamp TEXT NOT NULL
+    )
+  `);
+
+  // Table 5: Telemetry History (ready for sensor integration)
   db.run(`
     CREATE TABLE IF NOT EXISTS telemetry_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,6 +96,12 @@ db.serialize(() => {
   db.run(
     `INSERT OR IGNORE INTO lamp_status (pole_id, status, brightness, mode, last_updated) VALUES (?, ?, ?, ?, ?)`,
     ['POLE-001', 'OFF', 100, 'MANUAL', new Date().toISOString()]
+  );
+
+  // Seed initial row in lcd_status if empty
+  db.run(
+    `INSERT OR IGNORE INTO lcd_status (pole_id, line1, line2, backlight, last_updated) VALUES (?, ?, ?, ?, ?)`,
+    ['POLE-001', 'SMART POLE SYS', 'SYSTEM READY', 1, new Date().toISOString()]
   );
 });
 
