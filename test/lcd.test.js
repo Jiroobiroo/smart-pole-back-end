@@ -115,3 +115,4 @@ describe('Smart Pole LCD Display API Tests', () => {
     assert.equal(res.body.data.backlight, false);
   });
 });
+

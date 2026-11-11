@@ -42,6 +42,10 @@ This REST API allows operators to remotely monitor and control smart pole street
       description: 'Endpoints for sensor data ingestion, electrical power calculations, and fault alerts'
     },
     {
+      name: 'Database',
+      description: 'SQLite database inspection and maintenance'
+    },
+    {
       name: 'System',
       description: 'System health and diagnostics'
     }
@@ -433,6 +437,19 @@ This REST API allows operators to remotely monitor and control smart pole street
                 schema: { $ref: '#/components/schemas/TelemetryResponse' }
               }
             }
+          }
+        }
+      }
+    },
+    // --- DATABASE INSPECTOR ---
+    '/api/v1/database/viewer': {
+      get: {
+        tags: ['Database'],
+        summary: 'Inspect Raw SQLite Database Tables',
+        description: 'Returns all records from lamp_status, lamp_logs, lcd_status, and lcd_logs tables for live verification.',
+        responses: {
+          '200': {
+            description: 'SQLite database contents retrieved successfully'
           }
         }
       }

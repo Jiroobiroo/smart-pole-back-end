@@ -28,6 +28,10 @@
       "description": "Endpoints for sensor data ingestion, electrical power calculations, and fault alerts"
     },
     {
+      "name": "Database",
+      "description": "SQLite database inspection and maintenance"
+    },
+    {
       "name": "System",
       "description": "System health and diagnostics"
     }
@@ -516,6 +520,20 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/database/viewer": {
+      "get": {
+        "tags": [
+          "Database"
+        ],
+        "summary": "Inspect Raw SQLite Database Tables",
+        "description": "Returns all records from lamp_status, lamp_logs, lcd_status, and lcd_logs tables for live verification.",
+        "responses": {
+          "200": {
+            "description": "SQLite database contents retrieved successfully"
           }
         }
       }
