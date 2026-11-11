@@ -100,12 +100,21 @@ Or run the unit tests directly:
 node --test test/lampService.test.js
 ```
 
+### Interactive Swagger UI & OpenAPI Specification
+Once the server is running, you can explore, test, and document all endpoints interactively:
+- **Local Swagger UI**: Open [http://localhost:5000/api-docs](http://localhost:5000/api-docs) in your browser.
+- **Raw OpenAPI 3.0 JSON**: Access [http://localhost:5000/api-docs.json](http://localhost:5000/api-docs.json).
+- **Importing to [Swagger Editor (swagger.io)](https://editor.swagger.io/)**:
+  1. Open [https://editor.swagger.io/](https://editor.swagger.io/)
+  2. Select **File &rarr; Import File** and choose the `swagger.json` file in this project root (or **File &rarr; Import URL** and paste `http://localhost:5000/api-docs.json`).
+  3. You will have full interactive testing and schema visualization on Swagger.io!
+
 ### Quick Interactive Dashboard
 Open your browser at:
 ```text
 http://localhost:5000/
 ```
-From here you can visually switch the lamp ON/OFF, toggle, adjust brightness, and watch event history update live.
+From here you can visually switch the lamp ON/OFF, toggle, adjust brightness, watch event history update live, and click the direct link to the Swagger UI.
 
 ---
 
@@ -314,3 +323,4 @@ See [`firmware_examples/esp32_lamp_controller.ino`](file:///c:/Users/DELL/OneDri
 2. Polls `GET http://<backend-ip>:5000/api/v1/lamp` every 2 seconds.
 3. Deserializes the JSON payload.
 4. Drives the relay GPIO pin `HIGH` or `LOW` accordingly.
+

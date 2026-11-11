@@ -23,3 +23,4 @@ router.post('/dimming', validateLampDimming, lampController.setLampBrightness);
 router.get('/history', lampController.getLampHistory);
 
 module.exports = router;
+

@@ -55,3 +55,4 @@ describe('LampService Unit Tests', () => {
     assert.equal(limited.length, 3);
   });
 });
+

@@ -11,6 +11,8 @@ const server = app.listen(config.port, () => {
   logger.info(`📍 Environment : ${config.nodeEnv}`);
   logger.info(`💡 Target Pole : ${config.poleId}`);
   logger.info(`🌐 Endpoints   : http://localhost:${config.port}/api/v1/lamp`);
+  logger.info(`📚 Swagger UI  : http://localhost:${config.port}/api-docs`);
+  logger.info(`📄 OpenAPI JSON: http://localhost:${config.port}/api-docs.json`);
   logger.info(`🩺 Health Check: http://localhost:${config.port}/health`);
   logger.info(`========================================================`);
 });
@@ -28,3 +30,4 @@ process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 process.on('SIGINT', () => handleShutdown('SIGINT'));
 
 module.exports = server;
+

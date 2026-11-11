@@ -74,6 +74,13 @@ describe('Smart Pole Lamp Control API Tests', () => {
     assert.equal(res.body.status, 'healthy');
   });
 
+  test('GET /api-docs.json returns OpenAPI specification', async () => {
+    const res = await request('/api-docs.json');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.openapi, '3.0.0');
+    assert.ok(res.body.paths['/api/v1/lamp']);
+  });
+
   test('GET /api/v1/lamp returns default initial status', async () => {
     const res = await request('/api/v1/lamp');
     assert.equal(res.status, 200);
@@ -182,3 +189,4 @@ describe('Smart Pole Lamp Control API Tests', () => {
     assert.equal(res.body.success, false);
   });
 });
+

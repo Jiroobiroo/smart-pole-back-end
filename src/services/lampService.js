@@ -137,3 +137,4 @@ class LampService {
 
 // Export singleton instance
 module.exports = new LampService();
+
