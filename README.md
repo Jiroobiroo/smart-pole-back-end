@@ -31,8 +31,6 @@ Backend REST API for controlling and monitoring the smart pole streetlight, buil
 lamp-control-api/
 ├── firmware_examples/
 │   └── esp32_lamp_controller.ino     # Sample ESP32 / Proteus firmware
-├── public/
-│   └── index.html                    # Interactive test dashboard
 ├── src/
 │   ├── config/
 │   │   └── index.js                  # Environment & config loader
@@ -109,13 +107,6 @@ Once the server is running, you can explore, test, and document all endpoints in
   1. Open [https://editor.swagger.io/](https://editor.swagger.io/)
   2. Select **File &rarr; Import File** and choose the `swagger.json` file in this project root (or **File &rarr; Import URL** and paste `http://localhost:5000/api-docs.json`).
   3. You will have full interactive testing and schema visualization on Swagger.io!
-
-### Quick Interactive Dashboard
-Open your browser at:
-```text
-http://localhost:5000/
-```
-From here you can visually switch the lamp ON/OFF, toggle, adjust brightness, watch event history update live, and click the direct link to the Swagger UI.
 
 ---
 

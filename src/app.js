@@ -3,7 +3,6 @@
  */
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swaggerSpec');
 const logger = require('./middleware/logger');
@@ -19,9 +18,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(logger.requestMiddleware);
-
-// Serve static frontend files (Quick-test Dashboard)
-app.use(express.static(path.join(__dirname, '../public')));
 
 // Swagger API Documentation (Swagger UI & Raw JSON endpoint)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
